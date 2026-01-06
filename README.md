@@ -198,18 +198,26 @@ CryptoForge/
 ## 🔧 Dependencias Principales
 
 ```xml
-    org.bouncycastle
-    bcprov-jdk18on
-    1.78.1
+<!-- Cryptographic Provider -->
+<dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcprov-jdk18on</artifactId>
+    <version>1.78.1</version>
+</dependency>
 
-    org.openjfx
-    javafx-controls
-    21.0.5
+<!-- JavaFX -->
+<dependency>
+    <groupId>org.openjfx</groupId>
+    <artifactId>javafx-controls</artifactId>
+    <version>21.0.5</version>
+</dependency>
 
-    commons-codec
-    commons-codec
-    1.17.1
-
+<!-- Utilities -->
+<dependency>
+    <groupId>commons-codec</groupId>
+    <artifactId>commons-codec</artifactId>
+    <version>1.17.1</version>
+</dependency>
 ```
 
 ---
@@ -218,7 +226,7 @@ CryptoForge/
 
 ### Próximas Características
 - [ ] Soporte para más algoritmos de derivación de claves
-- [ ] Soporte algoritmos PostQuantum
+- [ ] Operativas PostQuantum
 - [ ] Batch processing de operaciones
 - [ ] Import/Export de configuraciones
 - [ ] Scripts de automatización
