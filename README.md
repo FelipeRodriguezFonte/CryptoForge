@@ -198,21 +198,13 @@ CryptoForge/
 ## 🔧 Dependencias Principales
 
 ```xml
-
-
     org.bouncycastle
     bcprov-jdk18on
     1.78.1
 
-
-
-
     org.openjfx
     javafx-controls
     21.0.5
-
-
-
 
     commons-codec
     commons-codec
@@ -226,18 +218,12 @@ CryptoForge/
 
 ### Próximas Características
 - [ ] Soporte para más algoritmos de derivación de claves
-- [ ] Operaciones con certificados digitales (generación de CSR, self-signed)
+- [ ] Soporte algoritmos PostQuantum
 - [ ] Batch processing de operaciones
 - [ ] Import/Export de configuraciones
 - [ ] Scripts de automatización
 - [ ] Soporte para HSM (simulado)
 - [ ] Más vectores de test integrados
-
-### Ideas en Consideración
-- Modo API REST para integración con otros sistemas
-- Plugins para operaciones custom
-- Temas visuales personalizables
-- Soporte para más estándares de la industria
 
 ---
 
