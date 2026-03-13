@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.cryptoforge</groupId>
-  <artifactId>cryptoforge</artifactId>
-  <name>CryptoForge</name>
+  <groupId>com.cryptocarver</groupId>
+  <artifactId>cryptocarver</artifactId>
+  <name>CryptoCarver</name>
   <version>1.0.0</version>
-  <description>CryptoForge - Advanced Cryptographic Tool with JavaFX GUI</description>
+  <description>CryptoCarver - Advanced Cryptographic Tool with JavaFX GUI</description>
   <build>
     <plugins>
       <plugin>
@@ -21,9 +21,9 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>com.cryptoforge.CryptoCalculatorModern</mainClass>
+          <mainClass>com.cryptocarver.CryptoCalculatorModern</mainClass>
           <options>
-            <option>-Xdock:name="CryptoForge"</option>
+            <option>-Xdock:name="CryptoCarver"</option>
             <option>-Xdock:icon="${project.basedir}/src/main/resources/icons/app-icon.png"</option>
           </options>
         </configuration>
@@ -40,7 +40,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.cryptoforge.Launcher</mainClass>
+                  <mainClass>com.cryptocarver.Launcher</mainClass>
                 </transformer>
               </transformers>
               <filters>

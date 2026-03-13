@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "================================================"
-echo "  CryptoForge - MODERN UI PROTOTYPE"
+echo "  CryptoCarver - MODERN UI PROTOTYPE"
 echo "================================================"
 echo ""
 echo "Cleaning and rebuilding..."

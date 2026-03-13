@@ -1,4 +1,4 @@
-# CryptoForge 🔐
+# CryptoCarver 🔐
 
 **Calculadora Criptográfica Avanzada con Interfaz Gráfica**
 
@@ -10,9 +10,9 @@
 
 ## 📖 Sobre el Proyecto
 
-CryptoForge es una aplicación que llevaba años queriendo desarrollar. Gracias a la ayuda de **Gemini** y **Claude AI**, finalmente he podido llevarla a cabo en tiempo récord.
+CryptoCarver es una aplicación que llevaba años queriendo desarrollar. Gracias a la ayuda de **Gemini** y **Claude AI**, finalmente he podido llevarla a cabo en tiempo récord.
 
-### ¿Por qué CryptoForge?
+### ¿Por qué CryptoCarver?
 
 El objetivo principal es **facilitar cálculos criptográficos** a todos aquellos profesionales y estudiantes que necesitan realizarlos de forma **rápida y sencilla**, sin tener que estar codificando cada vez que necesitan:
 
@@ -103,7 +103,7 @@ La idea es ir **evolucionando las capacidades** de la herramienta según las nec
 
 ```bash
 # Clonar o descargar el proyecto
-cd CryptoForge
+cd CryptoCarver
 
 # Compilar con Maven
 mvn clean package
@@ -176,10 +176,10 @@ Este proyecto no habría sido posible sin:
 
 ### Estructura del Proyecto
 ```
-CryptoForge/
+CryptoCarver/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/cryptoforge/
+│   │   ├── java/com/cryptocarver/
 │   │   │   ├── ui/          # Controllers (JavaFX)
 │   │   │   ├── crypto/      # Operaciones criptográficas
 │   │   │   ├── utils/       # Utilidades

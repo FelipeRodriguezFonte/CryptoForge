@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Configuration
-APP_NAME="CryptoForge"
+APP_NAME="CryptoCarver"
 APP_VERSION="1.0.0"
-MAIN_JAR="target/cryptoforge-1.0.0.jar"
-MAIN_CLASS="com.cryptoforge.Launcher"
+MAIN_JAR="target/cryptocarver-1.0.0.jar"
+MAIN_CLASS="com.cryptocarver.Launcher"
 ICON_SOURCE="src/main/resources/icons/app-icon.png"
 ICON_TARGET="src/main/resources/icons/app-icon.icns"
 OUTPUT_DIR="dist"
@@ -32,7 +32,7 @@ if [ ! -x "$JPACKAGE" ]; then
 fi
 
 echo "=========================================="
-echo "  Building CryptoForge (macOS)"
+echo "  Building CryptoCarver (macOS)"
 echo "=========================================="
 
 # 0. Icon Generation
@@ -96,7 +96,7 @@ JPACKAGE_ARGS=(
   --name "$APP_NAME"
   --app-version "$APP_VERSION"
   --input target
-  --main-jar "cryptoforge-1.0.0.jar"
+  --main-jar "cryptocarver-1.0.0.jar"
   --main-class "$MAIN_CLASS"
   --type app-image
   --dest "$OUTPUT_DIR"

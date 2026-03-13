@@ -4,11 +4,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.TextFlow?>
-<?import com.cryptoforge.ui.NavigationRail?>
-<?import com.cryptoforge.ui.SidePanel?>
+<?import com.cryptocarver.ui.NavigationRail?>
+<?import com.cryptocarver.ui.SidePanel?>
 
 <BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
-            fx:controller="com.cryptoforge.ui.ModernMainController">
+            fx:controller="com.cryptocarver.ui.ModernMainController">
     
     <!-- Menu Bar -->
     <top>
@@ -1169,6 +1169,8 @@
                                             <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10 0 0 0;">
                                                 <Button text="Encrypt" onAction="#handleSymmetricEncrypt" styleClass="action-button"/>
                                                 <Button text="Decrypt" onAction="#handleSymmetricDecrypt" styleClass="action-button"/>
+                                                <Button text="Encrypt File..." onAction="#handleSymmetricEncryptFile" styleClass="secondary-button"/>
+                                                <Button text="Decrypt File..." onAction="#handleSymmetricDecryptFile" styleClass="secondary-button"/>
                                             </HBox>
                                         </VBox>
                                     </TitledPane>
