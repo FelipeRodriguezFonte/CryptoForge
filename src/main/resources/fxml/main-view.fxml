@@ -1546,6 +1546,7 @@
                                 <Button text="Encrypt File..." HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="secondary-button" onAction="#handleSymmetricEncryptFile" />
                                 <Button text="Decrypt File..." HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="secondary-button" onAction="#handleSymmetricDecryptFile" />
                             </HBox>
+                            <Button text="Analyze Encrypted File..." maxWidth="Infinity" styleClass="secondary-button" onAction="#handleAnalyzeEncryptedFile" />
                         </VBox>
                         
                         <Separator />

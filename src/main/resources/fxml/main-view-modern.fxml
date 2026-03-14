@@ -1171,6 +1171,7 @@
                                                 <Button text="Decrypt" onAction="#handleSymmetricDecrypt" styleClass="action-button"/>
                                                 <Button text="Encrypt File..." onAction="#handleSymmetricEncryptFile" styleClass="secondary-button"/>
                                                 <Button text="Decrypt File..." onAction="#handleSymmetricDecryptFile" styleClass="secondary-button"/>
+                                                <Button text="Analyze Encrypted File..." onAction="#handleAnalyzeEncryptedFile" styleClass="secondary-button"/>
                                             </HBox>
                                         </VBox>
                                     </TitledPane>

@@ -3,6 +3,7 @@ package com.cryptocarver.ui;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.stage.FileChooser;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import java.io.File;
@@ -1594,6 +1595,221 @@ public class ModernMainController implements StatusReporter {
             fileChooser.setInitialFileName(suggestedFileName);
         }
         return fileChooser.showSaveDialog(mainPane.getScene().getWindow());
+    }
+
+    private CipherController.ExpertFileOptions chooseExpertFileOptions(boolean encryptOperation) {
+        Dialog<CipherController.ExpertFileOptions> dialog = new Dialog<>();
+        dialog.setTitle(encryptOperation ? "Expert File Encryption Options" : "Expert File Decryption Options");
+        dialog.setHeaderText("Configure processing mode, block size and file encodings");
+
+        ButtonType applyButtonType = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(applyButtonType, ButtonType.CANCEL);
+
+        ComboBox<String> processingCombo = new ComboBox<>();
+        processingCombo.getItems().addAll(
+                "Full content (single pass)",
+                "Independent blocks");
+        processingCombo.setValue("Full content (single pass)");
+
+        TextField blockSizeField = new TextField("4096");
+        blockSizeField.setDisable(true);
+        processingCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            blockSizeField.setDisable(!"Independent blocks".equals(newVal));
+        });
+
+        ComboBox<CipherController.FileDataEncoding> inputEncodingCombo = new ComboBox<>();
+        inputEncodingCombo.getItems().addAll(CipherController.FileDataEncoding.values());
+        inputEncodingCombo.setValue(CipherController.FileDataEncoding.RAW);
+
+        ComboBox<CipherController.FileDataEncoding> outputEncodingCombo = new ComboBox<>();
+        outputEncodingCombo.getItems().addAll(CipherController.FileDataEncoding.values());
+        outputEncodingCombo.setValue(CipherController.FileDataEncoding.RAW);
+
+        Label paddingInfo = new Label("Padding in use: " + (paddingCombo != null ? paddingCombo.getValue() : "N/A"));
+        paddingInfo.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280;");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new Label("Processing mode:"), 0, 0);
+        grid.add(processingCombo, 1, 0);
+        grid.add(new Label("Block size (bytes):"), 0, 1);
+        grid.add(blockSizeField, 1, 1);
+        grid.add(new Label("Input encoding:"), 0, 2);
+        grid.add(inputEncodingCombo, 1, 2);
+        grid.add(new Label("Output encoding:"), 0, 3);
+        grid.add(outputEncodingCombo, 1, 3);
+        grid.add(paddingInfo, 0, 4, 2, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        final Node applyButton = dialog.getDialogPane().lookupButton(applyButtonType);
+        applyButton.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if ("Independent blocks".equals(processingCombo.getValue())) {
+                try {
+                    int blockSize = Integer.parseInt(blockSizeField.getText().trim());
+                    if (blockSize <= 0) {
+                        throw new NumberFormatException("Block size must be > 0");
+                    }
+                } catch (NumberFormatException ex) {
+                    showError("Validation Error", "Block size must be a positive integer.");
+                    event.consume();
+                }
+            }
+        });
+
+        dialog.setResultConverter(button -> {
+            if (button != applyButtonType) {
+                return null;
+            }
+
+            CipherController.FileProcessingMode mode = "Independent blocks".equals(processingCombo.getValue())
+                    ? CipherController.FileProcessingMode.INDEPENDENT_BLOCKS
+                    : CipherController.FileProcessingMode.FULL_CONTENT;
+
+            int blockSize = 4096;
+            if (mode == CipherController.FileProcessingMode.INDEPENDENT_BLOCKS) {
+                blockSize = Integer.parseInt(blockSizeField.getText().trim());
+            }
+
+            return new CipherController.ExpertFileOptions(
+                    mode,
+                    blockSize,
+                    inputEncodingCombo.getValue(),
+                    outputEncodingCombo.getValue());
+        });
+
+        return dialog.showAndWait().orElse(null);
+    }
+
+    private CipherController.FileAnalysisOptions chooseFileAnalysisOptions() {
+        Dialog<CipherController.FileAnalysisOptions> dialog = new Dialog<>();
+        dialog.setTitle("Encrypted File Analysis Options");
+        dialog.setHeaderText("Configure brute-force analysis parameters");
+
+        ButtonType analyzeButtonType = new ButtonType("Analyze", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(analyzeButtonType, ButtonType.CANCEL);
+
+        CheckBox fullContentCheck = new CheckBox("Test full-content decryption");
+        fullContentCheck.setSelected(true);
+        CheckBox independentCheck = new CheckBox("Test independent-block decryption");
+        independentCheck.setSelected(true);
+
+        TextField blockSizesField = new TextField("64,128,256,512,1024,2048,4096");
+        TextField maxResultsField = new TextField("8");
+        TextField sampleSizeField = new TextField("262144");
+
+        ComboBox<String> forcedEncodingCombo = new ComboBox<>();
+        forcedEncodingCombo.getItems().add("AUTO_ALL");
+        for (CipherController.FileDataEncoding encoding : CipherController.FileDataEncoding.values()) {
+            forcedEncodingCombo.getItems().add(encoding.name());
+        }
+        forcedEncodingCombo.setValue("AUTO_ALL");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(fullContentCheck, 0, 0, 2, 1);
+        grid.add(independentCheck, 0, 1, 2, 1);
+        grid.add(new Label("Candidate chunk sizes (bytes):"), 0, 2);
+        grid.add(blockSizesField, 1, 2);
+        grid.add(new Label("Max results:"), 0, 3);
+        grid.add(maxResultsField, 1, 3);
+        grid.add(new Label("Sample size (bytes):"), 0, 4);
+        grid.add(sampleSizeField, 1, 4);
+        grid.add(new Label("Forced input encoding:"), 0, 5);
+        grid.add(forcedEncodingCombo, 1, 5);
+
+        dialog.getDialogPane().setContent(grid);
+
+        final Node analyzeButton = dialog.getDialogPane().lookupButton(analyzeButtonType);
+        analyzeButton.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            if (!fullContentCheck.isSelected() && !independentCheck.isSelected()) {
+                showError("Validation Error", "Select at least one analysis strategy.");
+                event.consume();
+                return;
+            }
+            try {
+                Integer.parseInt(maxResultsField.getText().trim());
+                Integer.parseInt(sampleSizeField.getText().trim());
+                parseBlockSizes(blockSizesField.getText().trim());
+            } catch (Exception ex) {
+                showError("Validation Error", "Check numeric fields and chunk sizes (e.g. 64,128,256 or 128b for bits).");
+                event.consume();
+            }
+        });
+
+        dialog.setResultConverter(button -> {
+            if (button != analyzeButtonType) {
+                return null;
+            }
+
+            int[] blockSizes = parseBlockSizes(blockSizesField.getText().trim());
+            int maxResults = Integer.parseInt(maxResultsField.getText().trim());
+            int sampleSize = Integer.parseInt(sampleSizeField.getText().trim());
+            CipherController.FileDataEncoding forcedEncoding = "AUTO_ALL".equals(forcedEncodingCombo.getValue())
+                    ? null
+                    : CipherController.FileDataEncoding.valueOf(forcedEncodingCombo.getValue());
+
+            return new CipherController.FileAnalysisOptions(
+                    blockSizes,
+                    fullContentCheck.isSelected(),
+                    independentCheck.isSelected(),
+                    maxResults,
+                    forcedEncoding,
+                    sampleSize);
+        });
+
+        return dialog.showAndWait().orElse(null);
+    }
+
+    private int[] parseBlockSizes(String text) {
+        if (text == null || text.isBlank()) {
+            return new int[] { 64, 128, 256, 512, 1024, 2048, 4096 };
+        }
+
+        String[] parts = text.split(",");
+        java.util.List<Integer> sizes = new java.util.ArrayList<>();
+        for (String part : parts) {
+            String token = part.trim();
+            if (token.isEmpty()) {
+                continue;
+            }
+
+            String compact = token.replaceAll("\\s+", "");
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("^(\\d+)([A-Za-z]*)$").matcher(compact);
+            if (!matcher.matches()) {
+                throw new NumberFormatException("Invalid block size token: " + token);
+            }
+
+            int value = Integer.parseInt(matcher.group(1));
+            String suffix = matcher.group(2);
+            int bytes;
+
+            if (suffix.isEmpty() || "B".equals(suffix)
+                    || "byte".equalsIgnoreCase(suffix)
+                    || "bytes".equalsIgnoreCase(suffix)) {
+                bytes = value;
+            } else if ("b".equals(suffix)
+                    || "bit".equalsIgnoreCase(suffix)
+                    || "bits".equalsIgnoreCase(suffix)) {
+                if (value % 8 != 0) {
+                    throw new NumberFormatException("Bit-sized block must be divisible by 8: " + token);
+                }
+                bytes = value / 8;
+            } else {
+                throw new NumberFormatException("Unsupported block size suffix: " + token);
+            }
+
+            if (bytes <= 0) {
+                throw new NumberFormatException("Block size must be > 0");
+            }
+            sizes.add(bytes);
+        }
+        if (sizes.isEmpty()) {
+            throw new NumberFormatException("Provide at least one block size");
+        }
+        return sizes.stream().distinct().sorted().mapToInt(Integer::intValue).toArray();
     }
 
     @FXML
@@ -3644,6 +3860,11 @@ public class ModernMainController implements StatusReporter {
             return;
         }
 
+        CipherController.ExpertFileOptions options = chooseExpertFileOptions(true);
+        if (options == null) {
+            return;
+        }
+
         File inputFile = chooseFile("Select File to Encrypt");
         if (inputFile == null) {
             return;
@@ -3654,15 +3875,19 @@ public class ModernMainController implements StatusReporter {
             return;
         }
 
-        cipherController.handleSymmetricEncryptFile(inputFile.toPath(), outputFile.toPath());
+        cipherController.handleSymmetricEncryptFile(inputFile.toPath(), outputFile.toPath(), options);
 
         Map<String, String> details = new HashMap<>();
         details.put("Algorithm", symmetricAlgorithmCombo.getValue());
         details.put("Mode", cipherModeCombo.getValue());
         details.put("Padding", paddingCombo.getValue());
+        details.put("Processing", options.getProcessingMode().name());
+        details.put("Block Size", options.getBlockSizeBytes() + " bytes");
+        details.put("Input Encoding", options.getInputEncoding().name());
+        details.put("Output Encoding", options.getOutputEncoding().name());
         details.put("Input File", inputFile.getAbsolutePath());
         details.put("Output File", outputFile.getAbsolutePath());
-        addToHistory("Symmetric Encrypt File", details);
+        addToHistory("Symmetric Encrypt File (Expert)", details);
     }
 
     @FXML
@@ -3689,6 +3914,11 @@ public class ModernMainController implements StatusReporter {
             return;
         }
 
+        CipherController.ExpertFileOptions options = chooseExpertFileOptions(false);
+        if (options == null) {
+            return;
+        }
+
         File inputFile = chooseFile("Select File to Decrypt");
         if (inputFile == null) {
             return;
@@ -3702,15 +3932,48 @@ public class ModernMainController implements StatusReporter {
             return;
         }
 
-        cipherController.handleSymmetricDecryptFile(inputFile.toPath(), outputFile.toPath());
+        cipherController.handleSymmetricDecryptFile(inputFile.toPath(), outputFile.toPath(), options);
 
         Map<String, String> details = new HashMap<>();
         details.put("Algorithm", symmetricAlgorithmCombo.getValue());
         details.put("Mode", cipherModeCombo.getValue());
         details.put("Padding", paddingCombo.getValue());
+        details.put("Processing", options.getProcessingMode().name());
+        details.put("Block Size", options.getBlockSizeBytes() + " bytes");
+        details.put("Input Encoding", options.getInputEncoding().name());
+        details.put("Output Encoding", options.getOutputEncoding().name());
         details.put("Input File", inputFile.getAbsolutePath());
         details.put("Output File", outputFile.getAbsolutePath());
-        addToHistory("Symmetric Decrypt File", details);
+        addToHistory("Symmetric Decrypt File (Expert)", details);
+    }
+
+    @FXML
+    private void handleAnalyzeEncryptedFile() {
+        if (cipherController == null) {
+            return;
+        }
+
+        File inputFile = chooseFile("Select Encrypted File to Analyze");
+        if (inputFile == null) {
+            return;
+        }
+
+        CipherController.FileAnalysisOptions options = chooseFileAnalysisOptions();
+        if (options == null) {
+            return;
+        }
+
+        cipherController.handleAnalyzeEncryptedFile(inputFile.toPath(), options);
+
+        Map<String, String> details = new HashMap<>();
+        details.put("Input File", inputFile.getAbsolutePath());
+        details.put("Full Content", String.valueOf(options.isTestFullContent()));
+        details.put("Independent Blocks", String.valueOf(options.isTestIndependentBlocks()));
+        details.put("Max Results", String.valueOf(options.getMaxResults()));
+        details.put("Sample Size", options.getSampleSizeBytes() + " bytes");
+        details.put("Forced Input Encoding",
+                options.getForcedInputEncoding() != null ? options.getForcedInputEncoding().name() : "AUTO_ALL");
+        addToHistory("Analyze Encrypted File", details);
     }
 
     @FXML
