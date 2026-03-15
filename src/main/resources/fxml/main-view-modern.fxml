@@ -1258,7 +1258,7 @@
                                                     <VBox spacing="5" style="-fx-padding: 8;">
                                                         <TextArea fx:id="signaturePrivateKeyArea" promptText="Paste Private Key PEM here..." 
                                                                   wrapText="true" style="-fx-font-family: 'Monospaced'; -fx-font-size: 10px;" VBox.vgrow="ALWAYS"/>
-                                                        <Button text="Load Private Key..." onAction="#handleLoadSignPrivateKey" 
+                                                        <Button text="Load Private Key File..." onAction="#handleLoadSignPrivateKey" 
                                                                     styleClass="secondary-button" maxWidth="Infinity" style="-fx-font-size: 10px;"/>
                                                     </VBox>
                                                 </Tab>
@@ -1266,7 +1266,7 @@
                                                     <VBox spacing="5" style="-fx-padding: 8;">
                                                         <TextArea fx:id="signaturePublicKeyArea" promptText="Paste Public Key PEM here..." 
                                                                   wrapText="true" style="-fx-font-family: 'Monospaced'; -fx-font-size: 10px;" VBox.vgrow="ALWAYS"/>
-                                                        <Button text="Load Public Key..." onAction="#handleLoadSignPublicKey" 
+                                                        <Button text="Load Public Key File..." onAction="#handleLoadSignPublicKey" 
                                                                     styleClass="secondary-button" maxWidth="Infinity" style="-fx-font-size: 10px;"/>
                                                     </VBox>
                                                 </Tab>

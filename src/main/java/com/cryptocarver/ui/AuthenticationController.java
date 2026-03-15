@@ -223,27 +223,10 @@ public class AuthenticationController {
      */
     private void loadPrivateKey(String pem) {
         try {
-            // Determine expected algorithm
             String selectedAlgo = signatureAlgorithmCombo.getValue();
-            if (selectedAlgo == null)
-                selectedAlgo = "RSA"; // Default
-
-            if (selectedAlgo.contains("Ed25519")) {
-                currentPrivateKey = AsymmetricKeyOperations.importEd25519PrivateKeyPEM(pem);
-            } else if (selectedAlgo.contains("ECDSA")) {
-                currentPrivateKey = AsymmetricKeyOperations.importECPrivateKeyPEM(pem);
-            } else {
-                // Default to RSA/Generic
-                currentPrivateKey = AsymmetricKeyOperations.importPrivateKeyPEM(pem);
-            }
-
-            String keyType = currentPrivateKey.getAlgorithm();
-            int keySize = getKeySize(currentPrivateKey);
-
-            signatureKeyStatusLabel.setText(String.format("Private: %s %d bits", keyType, keySize));
-            signatureKeyStatusLabel.setStyle("-fx-text-fill: green; -fx-font-size: 10px;");
-
-            mainController.updateStatus("Private key loaded: " + keyType);
+            currentPrivateKey = importPrivateKeyByAlgorithm(pem, selectedAlgo);
+            updateSignatureKeyStatus();
+            mainController.updateStatus("Private key loaded: " + currentPrivateKey.getAlgorithm());
 
         } catch (Exception e) {
             currentPrivateKey = null;
@@ -270,33 +253,10 @@ public class AuthenticationController {
      */
     private void loadPublicKey(String pem) {
         try {
-            // Determine expected algorithm
             String selectedAlgo = signatureAlgorithmCombo.getValue();
-            if (selectedAlgo == null)
-                selectedAlgo = "RSA"; // Default
-
-            if (selectedAlgo.contains("Ed25519")) {
-                currentPublicKey = AsymmetricKeyOperations.importEd25519PublicKeyPEM(pem);
-            } else if (selectedAlgo.contains("ECDSA")) {
-                currentPublicKey = AsymmetricKeyOperations.importECPublicKeyPEM(pem);
-            } else {
-                // Default to RSA/Generic
-                currentPublicKey = AsymmetricKeyOperations.importPublicKeyPEM(pem);
-            }
-
-            String keyType = currentPublicKey.getAlgorithm();
-            int keySize = getKeySize(currentPublicKey);
-
-            String currentText = signatureKeyStatusLabel.getText();
-            if (currentText.contains("Private")) {
-                signatureKeyStatusLabel.setText(String.format("%s | Public: %s %d bits",
-                        currentText, keyType, keySize));
-            } else {
-                signatureKeyStatusLabel.setText(String.format("Public: %s %d bits", keyType, keySize));
-            }
-            signatureKeyStatusLabel.setStyle("-fx-text-fill: green; -fx-font-size: 10px;");
-
-            mainController.updateStatus("Public key loaded: " + keyType);
+            currentPublicKey = importPublicKeyByAlgorithm(pem, selectedAlgo);
+            updateSignatureKeyStatus();
+            mainController.updateStatus("Public key loaded: " + currentPublicKey.getAlgorithm());
 
         } catch (Exception e) {
             currentPublicKey = null;
@@ -337,11 +297,6 @@ public class AuthenticationController {
      */
     public void handleSign() {
         try {
-            if (currentPrivateKey == null) {
-                mainController.showError("Key Error", "Please load a private key first");
-                return;
-            }
-
             String algorithm = signatureAlgorithmCombo.getValue();
             if (algorithm == null) {
                 mainController.showError("Algorithm Error", "Please select a signature algorithm");
@@ -355,9 +310,11 @@ public class AuthenticationController {
                 return;
             }
 
+            PrivateKey privateKey = resolvePrivateKeyForOperation(algorithm);
+
             // Verify key type matches algorithm
             String expectedKeyType = SignatureOperations.getExpectedKeyType(algorithm);
-            String actualKeyType = currentPrivateKey.getAlgorithm();
+            String actualKeyType = privateKey.getAlgorithm();
             if (!actualKeyType.equals(expectedKeyType)) {
                 mainController.showError("Key Mismatch",
                         String.format("Algorithm %s requires %s key, but loaded key is %s",
@@ -365,27 +322,8 @@ public class AuthenticationController {
                 return;
             }
 
-            // Ensure key is current from TextArea if possible
-            if (signaturePrivateKeyArea != null && !signaturePrivateKeyArea.getText().trim().isEmpty()) {
-                try {
-                    String pem = signaturePrivateKeyArea.getText().trim();
-                    if (algorithm.contains("Ed25519")) {
-                        currentPrivateKey = AsymmetricKeyOperations.importEd25519PrivateKeyPEM(pem);
-                    } else if (algorithm.contains("ECDSA")) {
-                        currentPrivateKey = AsymmetricKeyOperations.importECPrivateKeyPEM(pem);
-                    } else {
-                        currentPrivateKey = AsymmetricKeyOperations.importPrivateKeyPEM(pem);
-                    }
-                } catch (Exception e) {
-                    // Ignore, rely on loaded key or fail
-                    mainController.showError("Key Parse Error",
-                            "Could not parse private key from text area: " + e.getMessage());
-                    return;
-                }
-            }
-
             // Sign
-            byte[] signature = SignatureOperations.sign(data, currentPrivateKey, algorithm);
+            byte[] signature = SignatureOperations.sign(data, privateKey, algorithm);
 
             // Format output
             setOutputData(signature);
@@ -407,7 +345,7 @@ public class AuthenticationController {
             details.put("Algorithm", algorithm);
             details.put("Data Size", data.length + " bytes");
             details.put("Signature Size", signature.length + " bytes");
-            details.put("Key Type", currentPrivateKey != null ? currentPrivateKey.getAlgorithm() : "Unknown");
+            details.put("Key Type", privateKey.getAlgorithm());
             mainController.addToHistory("Data Signed", details);
 
         } catch (Exception e) {
@@ -422,34 +360,13 @@ public class AuthenticationController {
      */
     public void handleVerify() {
         try {
-            if (currentPublicKey == null) {
-                mainController.showError("Key Error", "Please load a public key first");
-                return;
-            }
-
             String algorithm = signatureAlgorithmCombo.getValue();
             if (algorithm == null) {
                 mainController.showError("Algorithm Error", "Please select a signature algorithm");
                 return;
             }
 
-            // Ensure key is current from TextArea if possible
-            if (signaturePublicKeyArea != null && !signaturePublicKeyArea.getText().trim().isEmpty()) {
-                try {
-                    String pem = signaturePublicKeyArea.getText().trim();
-                    if (algorithm.contains("Ed25519")) {
-                        currentPublicKey = AsymmetricKeyOperations.importEd25519PublicKeyPEM(pem);
-                    } else if (algorithm.contains("ECDSA")) {
-                        currentPublicKey = AsymmetricKeyOperations.importECPublicKeyPEM(pem);
-                    } else {
-                        currentPublicKey = AsymmetricKeyOperations.importPublicKeyPEM(pem);
-                    }
-                } catch (Exception e) {
-                    mainController.showError("Key Parse Error",
-                            "Could not parse public key from text area: " + e.getMessage());
-                    return;
-                }
-            }
+            PublicKey publicKey = resolvePublicKeyForOperation(algorithm);
 
             // Get signature from verify field
             String signatureText = signatureVerifyField.getText().trim();
@@ -474,7 +391,7 @@ public class AuthenticationController {
             }
 
             // Verify
-            boolean valid = SignatureOperations.verify(data, signature, currentPublicKey, algorithm);
+            boolean valid = SignatureOperations.verify(data, signature, publicKey, algorithm);
 
             if (valid) {
                 mainController.showInfo("Verification Success",
@@ -498,7 +415,7 @@ public class AuthenticationController {
             details.put("Algorithm", algorithm);
             details.put("Result", valid ? "VALID" : "INVALID");
             details.put("Data Size", data.length + " bytes");
-            details.put("Key Type", currentPublicKey != null ? currentPublicKey.getAlgorithm() : "Unknown");
+            details.put("Key Type", publicKey.getAlgorithm());
             mainController.addToHistory("Signature Verified", details);
 
         } catch (Exception e) {
@@ -709,6 +626,93 @@ public class AuthenticationController {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    private PrivateKey resolvePrivateKeyForOperation(String algorithm) {
+        try {
+            String pemFromText = signaturePrivateKeyArea != null ? signaturePrivateKeyArea.getText().trim() : "";
+            if (!pemFromText.isEmpty()) {
+                currentPrivateKey = importPrivateKeyByAlgorithm(pemFromText, algorithm);
+                updateSignatureKeyStatus();
+                return currentPrivateKey;
+            }
+
+            if (currentPrivateKey != null) {
+                return currentPrivateKey;
+            }
+
+            throw new IllegalArgumentException("Paste a Private Key PEM in the text area or load it from file.");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not load private key: " + e.getMessage(), e);
+        }
+    }
+
+    private PublicKey resolvePublicKeyForOperation(String algorithm) {
+        try {
+            String pemFromText = signaturePublicKeyArea != null ? signaturePublicKeyArea.getText().trim() : "";
+            if (!pemFromText.isEmpty()) {
+                currentPublicKey = importPublicKeyByAlgorithm(pemFromText, algorithm);
+                updateSignatureKeyStatus();
+                return currentPublicKey;
+            }
+
+            if (currentPublicKey != null) {
+                return currentPublicKey;
+            }
+
+            throw new IllegalArgumentException("Paste a Public Key PEM in the text area or load it from file.");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not load public key: " + e.getMessage(), e);
+        }
+    }
+
+    private PrivateKey importPrivateKeyByAlgorithm(String pem, String algorithm) throws Exception {
+        String selectedAlgo = algorithm != null ? algorithm : "RSA";
+        if (selectedAlgo.contains("Ed25519")) {
+            return AsymmetricKeyOperations.importEd25519PrivateKeyPEM(pem);
+        }
+        if (selectedAlgo.contains("ECDSA")) {
+            return AsymmetricKeyOperations.importECPrivateKeyPEM(pem);
+        }
+        return AsymmetricKeyOperations.importPrivateKeyPEM(pem);
+    }
+
+    private PublicKey importPublicKeyByAlgorithm(String pem, String algorithm) throws Exception {
+        String selectedAlgo = algorithm != null ? algorithm : "RSA";
+        if (selectedAlgo.contains("Ed25519")) {
+            return AsymmetricKeyOperations.importEd25519PublicKeyPEM(pem);
+        }
+        if (selectedAlgo.contains("ECDSA")) {
+            return AsymmetricKeyOperations.importECPublicKeyPEM(pem);
+        }
+        return AsymmetricKeyOperations.importPublicKeyPEM(pem);
+    }
+
+    private void updateSignatureKeyStatus() {
+        StringBuilder status = new StringBuilder();
+        if (currentPrivateKey != null) {
+            status.append("Private: ").append(formatKeyLabel(currentPrivateKey));
+        }
+        if (currentPublicKey != null) {
+            if (status.length() > 0) {
+                status.append(" | ");
+            }
+            status.append("Public: ").append(formatKeyLabel(currentPublicKey));
+        }
+
+        if (status.length() == 0) {
+            signatureKeyStatusLabel.setText("Ready to sign/verify");
+            signatureKeyStatusLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 10px;");
+            return;
+        }
+
+        signatureKeyStatusLabel.setText(status.toString());
+        signatureKeyStatusLabel.setStyle("-fx-text-fill: green; -fx-font-size: 10px;");
+    }
+
+    private String formatKeyLabel(java.security.Key key) {
+        int size = getKeySize(key);
+        return size > 0 ? key.getAlgorithm() + " " + size + " bits" : key.getAlgorithm();
     }
 
     // ============================================================
